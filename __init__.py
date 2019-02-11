@@ -133,7 +133,13 @@ def download_json_out(alias, upload_entry, file_name):
 @app.route("/visualization", methods=['GET', 'POST'])
 def redirect_visualization():
     return render_template('visualization.html'), 200
-	
+
+
+@app.route("/sessionz", methods=['GET'])
+def get_sessions():
+    sessions = SessionHandler.get_entries()
+    return render_template('sessions.html', sessions=sessions), 200
+
 
 @app.route('/', methods=['GET', 'POST'])
 def render():
