@@ -2,16 +2,24 @@
 
 import unittest
 import random
+import requests
+import os
 from Helper import Location
 from Input import Ride
 from Output import Vehicle
-from ProblemSolver import Solver
+from threading import Thread
+from time import sleep
 
 DEFAULT_NUMBER_OF_TRIES = 10000
 DEFAULT_MIN_VALUE = 0
 DEFAULT_MAX_VALUE = 1000
 DEFAULT_BONUS = 2
 DEFAULT_MULTI_FACTOR_FINISH = 3
+
+WEBPAGE_URL = 'INSERT_HERE'
+
+project_dir = os.path.dirname(os.path.abspath(__file__))
+test_file_name = os.path.join(project_dir, "out", "examples", "a_example.out")
 
 
 def rnd(min=DEFAULT_MIN_VALUE, max=DEFAULT_MAX_VALUE):
@@ -27,7 +35,6 @@ def generate_ride_big_distance(min=DEFAULT_MIN_VALUE, max=DEFAULT_MAX_VALUE):
     new_ride = Ride(rnd(0, min), rnd(0, min), rnd(0, max), rnd(0, max), rnd(min, max), rnd(min, max * DEFAULT_MULTI_FACTOR_FINISH))
     return new_ride
 
-
 def generate_vehicle(min=DEFAULT_MIN_VALUE, max=DEFAULT_MAX_VALUE):
     new_vehicle = Vehicle(1, 0)
     new_vehicle.position = Location(rnd(min, max), rnd(min, max))
@@ -35,6 +42,26 @@ def generate_vehicle(min=DEFAULT_MIN_VALUE, max=DEFAULT_MAX_VALUE):
 
 
 class Test(unittest.TestCase):
+
+    def execute_post(self, url, cookies, payload):
+        # files = {'file': ('a_example.out', payload, 'multipart/form-data')}
+        files = {'file[]': payload}
+        # print("Uploading file {0}".format(test_file_name))
+        r = requests.post(url, files=files, cookies=cookies)
+
+        string_to_search_for = "Uploaded files - Results"
+        # print(r.text)
+        self.assertNotEqual(r.text.find(string_to_search_for), -1, "Could not find uploaded files - results")
+
+    def post_on_threads(self, number_of_threads, url, cookies, payload):
+        threads = []
+        for i in range(number_of_threads):
+            thread = Thread(target=self.execute_post, args=(url, cookies, payload))
+            thread.start()
+            threads.append(thread)
+
+        for i in threads:
+            i.join()
 
     def the_real_tester(self, vehicle, ride, bonus):
         # data before calculation takes place
@@ -125,6 +152,20 @@ class Test(unittest.TestCase):
             ride.earliest_start = rnd(100, 500)
             ride.latest_finish = 99999
             self.the_real_tester(vehicle, ride, rnd(100, 1000))
+
+    def test_server(self):
+        cookies = dict(password='')
+        payload = open(test_file_name, 'rb')
+
+        # get page
+        # r = requests.get(WEBPAGE_URL, cookies=cookies)
+
+        # post file
+        for num in range(0, DEFAULT_NUMBER_OF_TRIES):
+            self.post_on_threads(4, WEBPAGE_URL, cookies, payload)
+            # sleep(2)
+
+        payload.close()
 
 
 if __name__ == '__main__':
