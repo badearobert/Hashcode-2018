@@ -25,6 +25,7 @@ class SessionStore:
         with lock:
             with open(SessionStore.file, 'w') as file:
                 file.write(str(value))
+                file.flush()
 
     @staticmethod
     def get():  # should not be used directly
