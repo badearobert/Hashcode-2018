@@ -90,6 +90,7 @@ class Solver:
 
         except Exception as e:
             print("Something crashed: " + str(e))
-            raise e
+            #raise e
+            return 0
 
         return final_score

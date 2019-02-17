@@ -41,7 +41,7 @@ def allowed_file(filename):
 
 def fail(error):
     print("In fail!")
-    alias = SessionHandler.get(request.remote_addr)
+    alias = get_alias_from_cookie()
     global_results = DatabaseHandler.get_entries()
     return render_template('index.html', error=error, global_results=global_results, alias=alias)
 
@@ -141,6 +141,16 @@ def get_sessions():
     return render_template('sessions.html', sessions=sessions), 200
 
 
+def get_alias_from_cookie():
+    alias = None
+    cookie = request.cookies.get('password')
+    if cookie is None:
+        print("No cookie")
+    else:
+        alias = SessionHandler.get(cookie)
+    return alias
+
+
 @app.route('/', methods=['GET', 'POST'])
 def render():
     local_results = []
@@ -148,13 +158,7 @@ def render():
 
     # check session or redirect to register
     SessionHandler.print()
-    alias = ""
-    cookie = request.cookies.get('password')
-    if cookie is None:
-        print("No cookie!")
-    else:
-        alias = SessionHandler.get(cookie)
-
+    alias = get_alias_from_cookie()
     print("alias is {0}".format(alias))
     if alias is None or alias is "":
         #return fail('Please set an alias')
